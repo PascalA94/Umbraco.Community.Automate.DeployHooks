@@ -1,0 +1,30 @@
+{
+  "$schema": "https://marketplace.umbraco.com/umbraco-marketplace-schema.json",
+  "Title": "Deploy Hooks",
+  "Description": "Automate actions that trigger Vercel, Netlify and Cloudflare Pages deploy hooks and Next.js revalidation, with coalescing of bulk publishes.",
+  "Category": "Editor Tools",
+  "PackageType": "Package",
+  "LicenseTypes": [
+    "Free"
+  ],
+  "DocumentationUrl": "https://github.com/PascalA94/Umbraco.Community.Automate.DeployHooks#readme",
+  "IssueTrackerUrl": "https://github.com/PascalA94/Umbraco.Community.Automate.DeployHooks/issues",
+  "LookingForContributors": true,
+  "AuthorDetails": {
+    "Name": "Pascal Meyer",
+    "Url": "https://github.com/PascalA94",
+    "ImageUrl": "https://github.com/PascalA94.png"
+  },
+  "Screenshots": [],
+  "Tags": [
+    "umbraco",
+    "umbraco-marketplace",
+    "automate",
+    "vercel",
+    "netlify",
+    "cloudflare-pages",
+    "nextjs",
+    "headless",
+    "deploy"
+  ]
+}

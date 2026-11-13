@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.Testing" />
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
+    <PackageReference Include="NSubstitute" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" PrivateAssets="all" />
+    <PackageReference Include="Umbraco.Automate.Testing" />
+    <!-- Credential isolation suite only (contract section 5.2, I06 and I07): Automate's real registration entry
+         point lives in Startup, and the configuration-consumer scan must see every assembly a site loads. -->
+    <PackageReference Include="Umbraco.Automate.Persistence" />
+    <PackageReference Include="Umbraco.Automate.Startup" />
+    <PackageReference Include="Umbraco.Automate.Web" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Umbraco.Community.Automate.DeployHooks\Umbraco.Community.Automate.DeployHooks.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Contract section 4 item 6: conformance tests C17 and C18 hash and version-check the store and both verbatim suites. -->
+    <EmbeddedResource Include="..\Umbraco.Community.Automate.DeployHooks\CredentialHelper\DeployHooksCredentialStore.cs" LogicalName="CredentialHelperContract.StoreSource.cs" />
+    <EmbeddedResource Include="CredentialHelperContract\CredentialHelperStoreContractTests.cs" LogicalName="CredentialHelperContract.StoreContractTests.cs" />
+    <EmbeddedResource Include="CredentialHelperContract\CredentialIsolationContractTests.cs" LogicalName="CredentialHelperContract.IsolationContractTests.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

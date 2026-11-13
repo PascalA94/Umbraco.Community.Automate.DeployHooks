@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Umbraco.Community.Automate.DeployHooks</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Umbraco.Community.Automate.DeployHooks</PackageId>
+    <Title>Deploy hooks for Umbraco Automate</Title>
+    <Description>Automate actions that trigger Vercel, Netlify and Cloudflare Pages deploy hooks and Next.js revalidation, with coalescing of bulk publishes.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageTags>umbraco umbraco-marketplace umbraco-automate automate vercel netlify cloudflare-pages nextjs headless deploy</PackageTags>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Lets a test prove which Automate line this assembly was built for (ScaffoldTests). -->
+    <AssemblyMetadata Include="AutomateMajor" Value="$(AutomateMajor)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Automate.Core's nuspec accepts the CMS floors on every release but enforces none of them,
+         so Umbraco.Cms.Core is referenced directly (and the ranges stay closed). -->
+    <PackageReference Include="Umbraco.Automate.Core" />
+    <PackageReference Include="Umbraco.Cms.Core" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="all" />
+    <!-- CVE pins (Directory.Packages.props): build and audit only, not consumer dependencies. -->
+    <PackageReference Include="MessagePack" PrivateAssets="all" />
+    <PackageReference Include="OpenTelemetry.Api" PrivateAssets="all" />
+    <PackageReference Include="System.Security.Cryptography.Xml" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\assets\icon.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Umbraco.Community.Automate.DeployHooks.Tests" />
+    <InternalsVisibleTo Include="Umbraco.Community.Automate.DeployHooks.IntegrationTests" />
+    <!-- NSubstitute proxies for internal types -->
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+  </ItemGroup>
+
+</Project>

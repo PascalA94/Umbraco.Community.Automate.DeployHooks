@@ -1,0 +1,93 @@
+<Project>
+  <!--
+    One codebase, two Umbraco Automate lines. -p:AutomateMajor=17|18 picks the dependency set, the closed version
+    ranges, the package version and the AUTOMATE_17 / AUTOMATE_18 constant. Only the 18 line ships for now
+    (eng/lines.txt); the 17 values exist so a v17 line is a one-line change later.
+
+    Lock files describe the floor and are committed per line (packages.<line>.lock.json). The latest CI leg passes
+    AutomateFloat=true, which floats Automate and the CMS to <line>.* and never writes a committed lock file.
+    Floors never go below 17.8.0 / 18.3.0: they sit above the 27 Oct 2026 advisories. Lowering one needs a security review.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AutomateMajor Condition="'$(AutomateMajor)' == ''">18</AutomateMajor>
+    <AutomateFloat Condition="'$(AutomateFloat)' == ''">false</AutomateFloat>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(AutomateMajor)' == '18'">
+    <AutomateVersion>18.5.1</AutomateVersion>
+    <AutomateRange>[18.5.1, 19.0.0)</AutomateRange>
+    <UmbracoCmsVersion>18.3.0</UmbracoCmsVersion>
+    <UmbracoCmsRange>[18.3.0, 19.0.0)</UmbracoCmsRange>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(AutomateMajor)' == '17'">
+    <AutomateVersion>17.5.1</AutomateVersion>
+    <AutomateRange>[17.5.1, 18.0.0)</AutomateRange>
+    <UmbracoCmsVersion>17.8.0</UmbracoCmsVersion>
+    <UmbracoCmsRange>[17.8.0, 18.0.0)</UmbracoCmsRange>
+  </PropertyGroup>
+
+  <!-- Fails fast: an unknown line would otherwise restore with empty version ranges. -->
+  <Target Name="ValidateAutomateMajor" BeforeTargets="CollectPackageReferences;_GenerateRestoreGraph" Condition="'$(AutomateMajor)' != '17' and '$(AutomateMajor)' != '18'">
+    <Error Text="AutomateMajor must be 17 or 18 (was '$(AutomateMajor)')." />
+  </Target>
+
+  <PropertyGroup>
+    <AutomateVersionSpec>$(AutomateRange)</AutomateVersionSpec>
+    <UmbracoCmsVersionSpec>$(UmbracoCmsRange)</UmbracoCmsVersionSpec>
+    <!-- The test and demo projects pin the floor exactly, so a locked restore is reproducible. -->
+    <UmbracoTestVersion Condition="'$(UmbracoTestVersion)' == ''">$(UmbracoCmsVersion)</UmbracoTestVersion>
+    <UmbracoDemoVersion Condition="'$(UmbracoDemoVersion)' == ''">$(UmbracoCmsVersion)</UmbracoDemoVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(AutomateFloat)' == 'true'">
+    <AutomateVersionSpec>$(AutomateMajor).*</AutomateVersionSpec>
+    <UmbracoCmsVersionSpec>$(AutomateMajor).*</UmbracoCmsVersionSpec>
+    <UmbracoTestVersion>$(AutomateMajor).*</UmbracoTestVersion>
+    <UmbracoDemoVersion>$(AutomateMajor).*</UmbracoDemoVersion>
+  </PropertyGroup>
+
+  <!-- Version: <line>.<minor>.<patch>; pre-releases pass -p:VersionSuffix=beta.1 -->
+  <PropertyGroup>
+    <PackageMinor Condition="'$(PackageMinor)' == ''">0</PackageMinor>
+    <PackagePatch Condition="'$(PackagePatch)' == ''">0</PackagePatch>
+    <VersionPrefix>$(AutomateMajor).$(PackageMinor).$(PackagePatch)</VersionPrefix>
+    <DefineConstants>$(DefineConstants);AUTOMATE_$(AutomateMajor)</DefineConstants>
+  </PropertyGroup>
+
+  <!-- One lock file per line, because a single file cannot hold two Automate versions. A floating restore cannot be locked. -->
+  <PropertyGroup>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <NuGetLockFilePath>packages.$(AutomateMajor).lock.json</NuGetLockFilePath>
+    <!-- Audit direct and transitive dependencies; build/check-vulnerable.sh is the PR and release gate. -->
+    <NuGetAuditMode>all</NuGetAuditMode>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(AutomateFloat)' == 'true'">
+    <RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
+    <NuGetLockFilePath>packages.$(AutomateMajor).float.lock.json</NuGetLockFilePath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Company>Pascal Meyer</Company>
+    <Authors>Pascal Meyer</Authors>
+    <Copyright>Copyright (c) Pascal Meyer $([System.DateTime]::Today.ToString('yyyy'))</Copyright>
+    <Product>Deploy hooks for Umbraco Automate</Product>
+    <PackageProjectUrl>https://github.com/PascalA94/Umbraco.Community.Automate.DeployHooks</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/PascalA94/Umbraco.Community.Automate.DeployHooks</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <NeutralLanguage>en-GB</NeutralLanguage>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
+  </PropertyGroup>
+
+  <!-- SourceLink, symbols package, deterministic build -->
+  <PropertyGroup>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+</Project>

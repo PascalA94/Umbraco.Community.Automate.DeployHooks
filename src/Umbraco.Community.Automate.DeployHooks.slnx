@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="Umbraco.Community.Automate.DeployHooks/Umbraco.Community.Automate.DeployHooks.csproj" />
+  <Project Path="Umbraco.Community.Automate.DeployHooks.Tests/Umbraco.Community.Automate.DeployHooks.Tests.csproj" />
+  <Project Path="Umbraco.Community.Automate.DeployHooks.IntegrationTests/Umbraco.Community.Automate.DeployHooks.IntegrationTests.csproj" />
+  <Project Path="../demo/Umbraco.Community.Automate.DeployHooks.DemoSite/Umbraco.Community.Automate.DeployHooks.DemoSite.csproj" />
+</Solution>
