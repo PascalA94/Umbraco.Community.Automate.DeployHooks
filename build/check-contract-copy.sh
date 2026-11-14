@@ -7,9 +7,9 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-TAG="credential-helper-1.0.1"
+TAG="credential-helper-1.0.2"
 # The published hash for this tag (contract header). Change both together when the helper is re-copied.
-EXPECTED_HASH="84ec091ad1cce3ad9cb6be9d8f480aaa7f533cc1f4594b34ec9f7a79d0c212e2"
+EXPECTED_HASH="4067bab2cc1fd0eb86d2f6bb717869bc44af0dae0cc7a095c206a740bd4d78cd"
 JIRA_SOURCE="${JIRA_SOURCE:-https://github.com/PascalA94/Umbraco.Community.Automate.Jira}"
 
 pkg="src/Umbraco.Community.Automate.DeployHooks/CredentialHelper"

@@ -114,3 +114,10 @@ Demo site (Umbraco 18.3.x, Automate 18.5.x, SQLite) against a throwaway Next.js 
 - **Deferred (Low or Info), none blocks release:** `%2f`, `%5c` and `%2e` in a hook path pass `HostRules` (config-author only; same provider host); dispose race on the retry token source (known, F6); no upper bound on `TimeoutSeconds` (known, F9); `release-checks.yml` lacks `persist-credentials: false` and pins no SQL Server image digest (manual workflow, read-only token); publish job's `setup-dotnet` floats `10.x`.
 - **Not verified by the sign-off:** Automate's no-redirect client blocking private addresses and redirects (load-bearing because the revalidate host defaults to any https host: set `AllowedRevalidateHosts`); real Netlify and Cloudflare Pages hook hosts; the integration tests; the telemetry residual.
 
+
+## Credential helper re-copied at 1.0.2
+
+- **Tag used:** `credential-helper-1.0.2` (Jira repo, commit `af52800`). A test-only patch of 1.0.1: I07 becomes an IL member-reference scan with 37 pins scoped to Automate minor versions, and I05b and I05c are new. The store is behaviourally identical; only its version marker changed. **[verified]**
+- **Hash:** `CanonicalHash` is `4067bab2…d78cd`; `build/check-contract-copy.sh` now points at the 1.0.2 tag and the same hash, and reports no diff. **[verified]**
+- **Conformance suites:** `--filter "ContractId~C|ContractId~I"` passes 60 of 60 on the 18 line, on the floor leg (locked restore) and on the latest leg (`-p:AutomateFloat=true`). C17 (hash), C18 (version), I05b, I05c and I07 each pass on their own. The full floor run passes (256 unit, 2 integration). I07 needed no new pin for DeployHooks. **[verified]**
+- **Line 17:** the same filter passes 60 of 60 on the floor leg (Automate 17.5.1) after rebasing onto the merged 17 line. The latest leg on 17 is left to the PR's `build (17, latest)` check. **[verified]**
