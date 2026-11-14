@@ -15,7 +15,11 @@
     "Url": "https://github.com/PascalA94",
     "ImageUrl": "https://github.com/PascalA94.png"
   },
-  "Screenshots": [],
+  "Screenshots": [
+    { "ImageUrl": "https://raw.githubusercontent.com/PascalA94/Umbraco.Community.Automate.DeployHooks/main/assets/screenshots/screenshot-01-automation.jpg", "Caption": "An automation: Content Published, Get Content, then Revalidate Next.js paths and tags." },
+    { "ImageUrl": "https://raw.githubusercontent.com/PascalA94/Umbraco.Community.Automate.DeployHooks/main/assets/screenshots/screenshot-02-revalidate-action.jpg", "Caption": "The Revalidate step: paths bound to the Get Content URL, and a cache tag." },
+    { "ImageUrl": "https://raw.githubusercontent.com/PascalA94/Umbraco.Community.Automate.DeployHooks/main/assets/screenshots/screenshot-03-runs.jpg", "Caption": "Runs: coalesced steps complete at once, and a deleted hook fails with a plain message and no URL." }
+  ],
   "Tags": [
     "umbraco",
     "umbraco-marketplace",
