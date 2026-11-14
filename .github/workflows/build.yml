@@ -131,7 +131,7 @@ jobs:
         run: bash build/gitleaks.sh "${{ github.event.pull_request.base.sha || github.event.before }}..${{ github.sha }}"
 
   # The lock files are named per line, which osv-scanner does not recognise, so each is passed explicitly.
-  # Add a new project's lock files here, and the 17 files when the 17 line ships.
+  # Add a new project's lock files here, for every line in eng/lines.txt.
   osv:
     permissions:
       contents: read
@@ -144,9 +144,13 @@ jobs:
       scan-args: |-
         --config=./osv-scanner.toml
         --lockfile=packages.lock.json:./src/Umbraco.Community.Automate.DeployHooks/packages.18.lock.json
+        --lockfile=packages.lock.json:./src/Umbraco.Community.Automate.DeployHooks/packages.17.lock.json
         --lockfile=packages.lock.json:./src/Umbraco.Community.Automate.DeployHooks.Tests/packages.18.lock.json
+        --lockfile=packages.lock.json:./src/Umbraco.Community.Automate.DeployHooks.Tests/packages.17.lock.json
         --lockfile=packages.lock.json:./src/Umbraco.Community.Automate.DeployHooks.IntegrationTests/packages.18.lock.json
+        --lockfile=packages.lock.json:./src/Umbraco.Community.Automate.DeployHooks.IntegrationTests/packages.17.lock.json
         --lockfile=packages.lock.json:./demo/Umbraco.Community.Automate.DeployHooks.DemoSite/packages.18.lock.json
+        --lockfile=packages.lock.json:./demo/Umbraco.Community.Automate.DeployHooks.DemoSite/packages.17.lock.json
 
   deps:
     needs: osv
@@ -164,8 +168,12 @@ jobs:
           global-json-file: global.json
           cache: true
           cache-dependency-path: '**/packages.*.lock.json'
-      # AutomateMajor defaults to 18; add a step per line here when the 17 line ships.
+      # AutomateMajor defaults to 18; each other line in eng/lines.txt gets its own pair of steps.
       - name: Restore (locked)
         run: dotnet restore src/Umbraco.Community.Automate.DeployHooks.slnx --locked-mode
       - name: Vulnerable packages (direct and transitive)
+        run: bash build/check-vulnerable.sh
+      - name: Restore 17 (locked)
+        run: dotnet restore src/Umbraco.Community.Automate.DeployHooks.slnx --locked-mode -p:AutomateMajor=17
+      - name: Vulnerable packages 17 (direct and transitive)
         run: bash build/check-vulnerable.sh
