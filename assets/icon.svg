@@ -1,7 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
-  <!-- Placeholder package icon: replace with the package's own design (keep 128x128, and re-render icon.png). -->
-  <rect width="128" height="128" rx="24" fill="#1b264f"/>
-  <path d="M64 26 98 44v40L64 102 30 84V44z" fill="#ffffff"/>
-  <path d="M64 26 98 44 64 62 30 44z" fill="#f5c1bc"/>
-  <path d="M64 62v40" stroke="#1b264f" stroke-width="4"/>
+  <title>Deploy Hooks for Umbraco Automate</title>
+  <rect width="128" height="128" fill="#1b264f"/>
+  <g stroke-linejoin="round" stroke-width="2">
+    <path d="M48 62 32 84v10l16-8z" fill="#f5c1bc" stroke="#f5c1bc"/>
+    <path d="M80 62l16 22v10L80 86z" fill="#f5c1bc" stroke="#f5c1bc"/>
+    <path d="M54 84h20L64 110z" fill="#f5c1bc" stroke="#f5c1bc"/>
+    <path d="M64 16l8 8 6 14 2 16v26H48V54l2-16 6-14z" fill="#ffffff" stroke="#ffffff"/>
+  </g>
+  <circle cx="64" cy="50" r="8" fill="#1b264f"/>
+  <circle cx="64" cy="50" r="4.5" fill="#f5c1bc"/>
 </svg>

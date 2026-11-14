@@ -9,6 +9,8 @@ Automate actions that trigger Vercel, Netlify and Cloudflare Pages deploy hooks 
 
 A community package, not made or supported by Umbraco HQ. Requires Umbraco 18 (18.3.0 or later) with Umbraco Automate 18.5.1 or later, on .NET 10.
 
+![An automation: Content Published, Get Content, then Revalidate Next.js paths and tags.](https://raw.githubusercontent.com/PascalA94/Umbraco.Community.Automate.DeployHooks/main/assets/screenshots/screenshot-01-automation.jpg)
+
 ## What it does
 
 When content changes, tell your headless front end:
@@ -32,6 +34,19 @@ HTTP Request can call a hook, but the hook URL then sits in the step settings, r
 ```bash
 dotnet add package Umbraco.Community.Automate.DeployHooks
 ```
+
+## Quick start
+
+About ten minutes, from install to a working automation. Each step links to the detail further down.
+
+1. **Install** the package (above) and restart the site.
+2. **Set the credential** in an environment variable or secret store, never in `appsettings.json`. Pick a name, for example `mysite`. A deploy hook needs `DeployHookUrl`. Revalidation needs `RevalidateUrl` (the full `https://…/api/revalidate` address) and `RevalidateSecret`. See [Set up credentials](#set-up-credentials).
+3. **Make sure Automate has a workspace** (Automate section, Workspaces). It needs a service account (an Umbraco API user), a user group, and the connections you are about to make listed under **Allowed Connections**. A connection that is not allowed in the workspace will not appear in its automations.
+4. **Create a connection** (Automate, Connections, Create): **Deploy hook** (pick the provider) and/or **Next.js revalidation endpoint**. Enter the credential name, save, then press **Test connection**. Add it to the workspace's Allowed Connections.
+5. **Build an automation** in the workspace, then **Save and publish** it:
+   - To rebuild: **Content Published**, then **Trigger deploy hook**.
+   - To refresh pages only: **Content Published**, then **Get Content** (Content Key `${ trigger.contentKey }`), then **Revalidate Next.js paths and tags** (Paths `${ steps.getContent.url }`). The site needs the [revalidate route](#the-revalidate-contract-version-1).
+6. **Publish a page** and open the automation's **Runs** tab. Coalesced steps finish at once and a failing hook is logged at Warning, so set `Coalesce seconds` to `0` while you are testing to see failures in the run.
 
 ## Set up credentials
 
@@ -106,7 +121,7 @@ The **Paths** field takes one path per line, and **Tags** one tag per line. Both
 
 Each connection and action kind keeps one pending batch in memory. A trailing debounce fires `Coalesce seconds` after the last request, but never later than `Maximum wait seconds` after the first. A request that arrives while a batch is being sent starts a new batch. On a clean shutdown, a pending batch is sent once.
 
-- **Coalesced steps succeed at once.** A failing hook or endpoint is logged at Warning, not shown in the run. Only transient failures (timeouts, throttling, 5xx, network errors) are retried, at 5 s and 30 s; a refusal such as a wrong secret or a deleted hook is not. A wrong credential still fails the step at once. **Set `Coalesce seconds` to `0` where you need to see a failure in the run.**
+- **Coalesced steps succeed at once.** A failing hook or endpoint is logged at Warning, not shown in the run. Only transient failures (timeouts, throttling, 5xx, network errors) are retried, at 5 s and 30 s; a refusal such as a wrong secret or a deleted hook is not. A deploy hook call is not idempotent: if a request times out after the provider has already started the build, the retry can start another, so one batch can start up to three builds (the first call and two retries). A wrong credential still fails the step at once. **Set `Coalesce seconds` to `0` where you need to see a failure in the run.**
 - **Single server:** one call per window. **Load-balanced back offices:** each server coalesces by itself, so N servers can send up to N calls per window. Shared state across servers is not built.
 - **A crash loses a pending batch.** The next publish triggers again.
 - Memory is bounded: one batch per connection and kind, up to 2,000 paths and 2,000 tags each. Beyond that, items are dropped and only a count is logged.
@@ -163,7 +178,7 @@ Section `Umbraco:Automate:DeployHooks`:
 | `TimeoutSeconds` | 15 | Per request. |
 | `MaxItemsPerCall` | 100 | Larger revalidation batches are split. |
 | `MaxBatchItems` | 2000 | Paths, and tags, held per pending batch, and the most one inline revalidate step sends. |
-| `AllowedRevalidateHosts` | empty | When set, a revalidate URL must use one of these hosts. Empty allows any https host, and Test connection names the host for admins. Set it in production. |
+| `AllowedRevalidateHosts` | empty | When set, a revalidate URL must use one of these hosts. Empty allows any https host, and Test connection names the host to anyone who can run it. Set it in production. |
 | `ProviderHosts:<Provider>:Host` and `:PathPrefix` | the table above | Replaces a provider's rule. Set both. Never settable per connection. |
 
 ## Security

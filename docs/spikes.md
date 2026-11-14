@@ -104,3 +104,13 @@ Demo site (Umbraco 18.3.x, Automate 18.5.x, SQLite) against a throwaway Next.js 
 - **Vercel Deployment Protection looks like a wrong secret.** A project with Vercel Authentication on answers 401 before the route runs, so the package reports "The endpoint refused the secret." The README now says so. A distinct message is not possible without parsing the body.
 - **Demo fixes found by the first Release checks run:** the demo needed `Umbraco.Automate` and the `OpenTelemetry.Api` pin, and `Umbraco:Automate:UseNamedConnectionString`. Fixed in #2.
 - **Still unverified:** Umbraco Cloud per-environment credentials; real Netlify and Cloudflare Pages hosts; a real private-address or redirect check on Automate's client; the 11-runs figure.
+
+## Release sign-off for 18.0.0 (2026-11-14)
+
+`security-analyst` (fresh context, full read of source, release path and claims). Verdict: **approve with conditions**; no Critical or High finding apart from the accepted telemetry residual. The release path (tag handling, `id-token` scope, `nuget` environment, rulesets, Actions permissions) had no finding.
+
+- **Medium, retry of a timed-out deploy POST** (`CoalescingDispatcher`): a timeout can mean the provider already started the build, so a batch can start up to three. **Ruling: documented, not changed** (README, SECURITY.md). Why: a missed deploy leaves published content off the live site, which is worse than a bounded duplicate build (at most 3 per window, per process). Cost if wrong: extra build minutes on a slow provider. The alternative, never retrying a deploy on Timeout or Unknown, is a one-line change plus tests and is the first candidate for 18.0.1 if anyone reports duplicate builds.
+- **Low, SECURITY.md misdescribed the source check:** corrected. Test connection shows the host and missing-credential names to anyone who can run it, not only admins: corrected.
+- **Deferred (Low or Info), none blocks release:** `%2f`, `%5c` and `%2e` in a hook path pass `HostRules` (config-author only; same provider host); dispose race on the retry token source (known, F6); no upper bound on `TimeoutSeconds` (known, F9); `release-checks.yml` lacks `persist-credentials: false` and pins no SQL Server image digest (manual workflow, read-only token); publish job's `setup-dotnet` floats `10.x`.
+- **Not verified by the sign-off:** Automate's no-redirect client blocking private addresses and redirects (load-bearing because the revalidate host defaults to any https host: set `AllowedRevalidateHosts`); real Netlify and Cloudflare Pages hook hosts; the integration tests; the telemetry residual.
+

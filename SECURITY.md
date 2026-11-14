@@ -27,10 +27,11 @@ credentials.
 What it does:
 - Keeps the hook URL, revalidate URL and revalidate secret in configuration under
   `Umbraco:Automate:DeployHooks:Credentials`, outside the database. A connection stores only a name.
-- Reads the values in two places only (the two senders; the start-up source check reads only which file holds a key),
+- Reads the values in two places only (the two senders, and the credential source check that Test connection runs, which loads a value into memory only to find which
+  source holds it and then discards it),
   and never writes them to a step setting, output, run record, the package's own log lines, error message or export.
   Leak tests cover each failure path through the package's code. They do not cover the HTTP client's own logging and
-  tracing (see below). Test connection shows the revalidate host to admins.
+  tracing (see below). Test connection shows the revalidate host, and the names of missing credentials, to anyone who can run it.
 - Sends only to a known provider host (checked on the resolved URL, `https` only, no userinfo), or to a revalidate
   host in `AllowedRevalidateHosts` when you set it. Never follows a redirect. Reads at most 1,024 bytes of an answer.
 - Cleans bound paths and tags, and never echoes a dropped value.
@@ -52,8 +53,9 @@ What it does not do:
   Automate's HTTP client and does not turn this off. Recorded as an accepted residual for 18.0.0.
 - The outbound protection (no redirects, blocking private addresses) is Automate's, through its no-redirect client. A
   test pins that the package asks for that client, but the protection itself has not been exercised here.
-- Deploy hook calls are not idempotent. Only transient failures are retried, but a host that adds resilience
-  handlers to every HTTP client can multiply requests.
+- Deploy hook calls are not idempotent. Only transient failures are retried, but a timeout can mean the provider already
+  started the build, so one coalesced batch can start up to three builds (the first call and two retries). A host that adds
+  resilience handlers to every HTTP client can multiply requests further.
 - Credential names are site-wide: anyone who can create an Automate connection can use any configured credential.
 
 ## Rotating a leaked credential
