@@ -1,7 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
   <title>Deploy Hooks for Umbraco Automate</title>
   <rect width="128" height="128" fill="#1b264f"/>
-  <path d="M96 64a32 32 0 1 1-9.4-22.6" fill="none" stroke="#f5c1bc" stroke-width="7" stroke-linecap="round"/>
-  <path d="M93.7 48.5 81.65 46.35 91.55 36.45z" fill="#f5c1bc" stroke="#f5c1bc" stroke-width="2" stroke-linejoin="round"/>
-  <path d="M64 38 83 61H72v26H56V61H45z" fill="#ffffff" stroke="#ffffff" stroke-width="2" stroke-linejoin="round"/>
+  <g stroke-linejoin="round" stroke-width="2">
+    <path d="M48 62 32 84v10l16-8z" fill="#f5c1bc" stroke="#f5c1bc"/>
+    <path d="M80 62l16 22v10L80 86z" fill="#f5c1bc" stroke="#f5c1bc"/>
+    <path d="M54 84h20L64 110z" fill="#f5c1bc" stroke="#f5c1bc"/>
+    <path d="M64 16l8 8 6 14 2 16v26H48V54l2-16 6-14z" fill="#ffffff" stroke="#ffffff"/>
+  </g>
+  <circle cx="64" cy="50" r="8" fill="#1b264f"/>
+  <circle cx="64" cy="50" r="4.5" fill="#f5c1bc"/>
 </svg>

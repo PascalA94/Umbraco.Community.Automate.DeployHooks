@@ -35,6 +35,19 @@ HTTP Request can call a hook, but the hook URL then sits in the step settings, r
 dotnet add package Umbraco.Community.Automate.DeployHooks
 ```
 
+## Quick start
+
+About ten minutes, from install to a working automation. Each step links to the detail further down.
+
+1. **Install** the package (above) and restart the site.
+2. **Set the credential** in an environment variable or secret store, never in `appsettings.json`. Pick a name, for example `mysite`. A deploy hook needs `DeployHookUrl`. Revalidation needs `RevalidateUrl` (the full `https://…/api/revalidate` address) and `RevalidateSecret`. See [Set up credentials](#set-up-credentials).
+3. **Make sure Automate has a workspace** (Automate section, Workspaces). It needs a service account (an Umbraco API user), a user group, and the connections you are about to make listed under **Allowed Connections**. A connection that is not allowed in the workspace will not appear in its automations.
+4. **Create a connection** (Automate, Connections, Create): **Deploy hook** (pick the provider) and/or **Next.js revalidation endpoint**. Enter the credential name, save, then press **Test connection**. Add it to the workspace's Allowed Connections.
+5. **Build an automation** in the workspace, then **Save and publish** it:
+   - To rebuild: **Content Published**, then **Trigger deploy hook**.
+   - To refresh pages only: **Content Published**, then **Get Content** (Content Key `${ trigger.contentKey }`), then **Revalidate Next.js paths and tags** (Paths `${ steps.getContent.url }`). The site needs the [revalidate route](#the-revalidate-contract-version-1).
+6. **Publish a page** and open the automation's **Runs** tab. Coalesced steps finish at once and a failing hook is logged at Warning, so set `Coalesce seconds` to `0` while you are testing to see failures in the run.
+
 ## Set up credentials
 
 A credential is a **name** you choose (lower case letters and digits, 1 to 32 characters, for example `mysite`) plus values kept in configuration under `Umbraco:Automate:DeployHooks:Credentials:<name>:`.
