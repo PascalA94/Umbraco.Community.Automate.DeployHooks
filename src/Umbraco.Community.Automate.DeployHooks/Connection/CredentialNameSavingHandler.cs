@@ -19,8 +19,9 @@ internal sealed class CredentialNameSavingHandler(DeployHooksCredentialStore sto
 {
     private const string Refusal = "The credential name must be 1 to 32 lower-case letters or digits. It is a name that points at a value in configuration, never the URL or the secret itself.";
 
-    // Automate 18.5.1 exposes the connection only through a protected member of the notification's base class, so a
-    // handler outside Automate has to read it by reflection. Remove this when Automate makes it public
+    // The connection is exposed only through `Target`, a protected member that ConnectionSavingNotification inherits from
+    // Umbraco CMS's ObjectNotification<T> (CMS 17.8.0 and 18.3.0, Automate 17.5.1 and 18.5.1 add nothing public), so a
+    // handler outside the CMS has to read it by reflection. Remove this when the CMS makes it public
     // (a test fails if the member disappears, so an upgrade can't silently disable the check).
     internal static readonly PropertyInfo? TargetProperty =
         typeof(ConnectionSavingNotification).GetProperty("Target", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);

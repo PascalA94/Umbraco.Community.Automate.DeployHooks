@@ -121,3 +121,25 @@ Demo site (Umbraco 18.3.x, Automate 18.5.x, SQLite) against a throwaway Next.js 
 - **Hash:** `CanonicalHash` is `4067bab2…d78cd`; `build/check-contract-copy.sh` now points at the 1.0.2 tag and the same hash, and reports no diff. **[verified]**
 - **Conformance suites:** `--filter "ContractId~C|ContractId~I"` passes 60 of 60 on the 18 line, on the floor leg (locked restore) and on the latest leg (`-p:AutomateFloat=true`). C17 (hash), C18 (version), I05b, I05c and I07 each pass on their own. The full floor run passes (256 unit, 2 integration). I07 needed no new pin for DeployHooks. **[verified]**
 - **Line 17:** the same filter passes 60 of 60 on the floor leg (Automate 17.5.1) after rebasing onto the merged 17 line. The latest leg on 17 is left to the PR's `build (17, latest)` check. **[verified]**
+
+## Manual check on the 17 line (2026-11-14)
+
+Booted demo on Umbraco CMS 17.8.0 and Automate 17.5.1 (HTTPS, SQLite, throwaway user and secrets, fake revalidate credential for a made-up name). Checked in the backoffice.
+
+- Both connection types appear (`deployHook`, `nextRevalidate`). The deploy hook form shows the Provider dropdown (Vercel default). **[verified]**
+- Saving a connection with a valid credential name works, so the saving handler's reflection read of `Target` succeeds on 17. **[verified]**
+- Saving a URL-shaped credential name is refused: the server log shows `Connection creation was cancelled by a notification handler` and nothing echoes the value. Automate 17's controller turns the cancel into an unhandled `OperationCanceledException`, so the backoffice shows a generic "fatal server error" and not the refusal text. Cosmetic, and not specific to this package. **[verified]**
+- Test connection on a deploy hook with no credential set: "No value is configured at Umbraco:Automate:DeployHooks:Credentials:demo:DeployHookUrl". It names the key only. **[verified]**
+- Test connection on the revalidate connection, pointed at `https://example.com/api/revalidate`: "The endpoint rejected the request (405)." A real POST reached the host and no secret appears in the message, so Automate 17.5.1 registers the no-redirect client name the package uses. **[verified]** It does not show that the client refuses redirects or private addresses (see the sign-off conditions below). **[PENDING]**
+- Leak scan: the fake bearer secret, the demo password and the fake URL-shaped name appear zero times in the server log, the trace logs, the SQLite database and its WAL. **[verified]**
+- **Not done:** the trigger and step bindings (`trigger.contentKey`, `steps.getContent.url`) and a run record. A workspace needs a service account key (an API user), user groups and an automation built in the designer, which was not set up. The bindings are unchanged source shared with 18 and covered by unit tests. **[PENDING]**
+
+## Delta review for the 17 line
+
+`security-analyst` (fresh context). Verdict: **approve with conditions** for the code. The only `AUTOMATE_17` guard is in a test, so production code has no line branch and no control differs between the lines.
+
+- **High, release path:** `publish.yml` rejects a tag whose major is not the newest line, and one `v18.M.P` tag packs both lines. So there is no `v17.0.0`: 17 ships as `17.M.P` from the next `v18.M.P` tag. **Ruling: tag `v18.0.1`**, which ships `18.0.1` (no functional change) and `17.0.1` together. Why: it needs no workflow change, and a change to the publish path would need its own security re-review. Cost if wrong: one extra 18 patch version on nuget.org.
+- **Low, reflection read:** it fails open with a Warning when the member goes missing, and closed when `credentialName` is missing or not a string. The `Target` member comes from Umbraco CMS (`ObjectNotification<T>`), not Automate: the code comment is corrected.
+- **Residual, same as 18:** Automate's no-redirect client is not proven to refuse redirects and private addresses (no decompiler; no repo test). `AllowedRevalidateHosts` defaults to any https host, so production sites should set it (the README says so). Follow-up: an integration test on both lines (a 3xx comes back, and a call to 127.0.0.1 is refused).
+- **Low:** `check-vulnerable.sh` audits whichever line was restored last. The CI order is correct today. Follow-up: take the line as an argument.
+- **Conditions:** green `build (17, *)`, `deps` and `osv` on the release commit; `gh release create` with `--latest=false` for any release that should not become Latest; tell 17 users to set `AllowedRevalidateHosts`.

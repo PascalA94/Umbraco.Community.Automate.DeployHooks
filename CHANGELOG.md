@@ -2,13 +2,12 @@
 
 Versions follow `<Umbraco major>.<minor>.<patch>`. Before tagging `vX.Y.Z`, rename "Unreleased" to `## X.Y.Z` (the publish workflow looks for that exact heading line).
 
-## Unreleased
+## 18.0.1
 
+One tag packs both lines, so this release ships `18.0.1` and `17.0.1` together. `18.0.1` has no functional change from `18.0.0`.
+
+- New `17.0.1` package for Umbraco CMS 17 and Umbraco Automate 17 (`Umbraco.Cms.Core [17.8.0, 18.0.0)`, `Umbraco.Automate.Core [17.5.1, 18.0.0)`). Same connections, actions, coalescing and settings as 18.
 - Credential helper contract 1.0.2 (test-only; the store's behaviour is unchanged).
-
-## 17.0.0
-
-- Same connections, actions, coalescing and settings as 18.0.0, built against Umbraco CMS 17 and Umbraco Automate 17 (`Umbraco.Cms.Core [17.8.0, 18.0.0)`).
 
 ## 18.0.0
 
