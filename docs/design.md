@@ -5,7 +5,7 @@
 | Package | `Umbraco.Community.Automate.DeployHooks` |
 | Owner | Pascal Meyer (`PascalA94`) |
 | Alias prefix | `community.deployHooks.` (frozen at first release) |
-| Size | S, about 4-7 h agent time, v18 line only |
+| Size | S, about 4-7 h agent time, v18 line first (the 17 line shipped later from the same code) |
 | Status | Draft design, 2026-11-04. Nothing built |
 | Inputs | `scope.md`, `../README.md`, `../credential-helper-contract.md` (1.0.0, Frozen), `../04-automate-jira/m0-result.md`, `../03-automate-teams/design.md` |
 
@@ -42,8 +42,8 @@ Real use case: a headless Next.js site (stack to confirm, Q1).
 
 ## 2. Constraints
 
-- **v18 line first.** `eng/lines.txt` = `18`. One codebase with Jira's `AutomateMajor=17|18` switch, so a v17 line is a one-line change later.
-- **Floors:** `Umbraco.Cms.Core [18.3.0, 19.0.0)` and `Umbraco.Automate.Core [18.5.1, 19.0.0)`. The 17 ranges (`[17.8.0, 18.0.0)` / `[17.5.1, 18.0.0)`) are defined in `Directory.Build.props` but not shipped.
+- **v18 line first, then 17.** One codebase with Jira's `AutomateMajor=17|18` switch. `eng/lines.txt` started as `18`; the 17 line shipped by adding `17` to it, with its lock files. One `v18.M.P` tag packs both lines (`17.M.P` and `18.M.P`).
+- **Floors:** `Umbraco.Cms.Core [18.3.0, 19.0.0)` and `Umbraco.Automate.Core [18.5.1, 19.0.0)`. The 17 ranges are `Umbraco.Cms.Core [17.8.0, 18.0.0)` and `Umbraco.Automate.Core [17.5.1, 18.0.0)`.
 - `net10.0`, plain `Microsoft.NET.Sdk`, no client code, no controllers, no Razor.
 - **Secret custody:** the frozen credential helper, copied verbatim from Jira at tag `credential-helper-1.0.0`. Prefix outside `AllowedConfigurationKeyPrefixes`. S7 gate is **GO on both lines** (`m0-result.md`).
 - **Pitfalls:** P2 (no statics holding scoped or mutable state; every service a singleton over singleton-safe dependencies), P1 (DI only), P7 (no heavy start-up work), S1/S3/S5 do not apply (no controllers, editors or surface controllers).

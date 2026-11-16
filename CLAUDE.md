@@ -9,11 +9,11 @@ Design `docs/design.md`, plan `docs/plan.md`, spikes `docs/spikes.md`. Maintaine
 
 ## Lines and versions
 
-- One codebase, two Automate lines: `-p:AutomateMajor=17|18` (default 18) picks the Automate and CMS ranges, the version, the `AUTOMATE_17`/`AUTOMATE_18` constant and the lock file (`packages.<line>.lock.json`). `eng/lines.txt` lists the lines that build and ship (18 only for now). The 18 ranges are `Umbraco.Cms.Core [18.3.0, 19.0.0)` and `Umbraco.Automate.Core [18.5.1, 19.0.0)`. Adding 17 means adding `17` to `eng/lines.txt`, committing its lock files and adding them to the `osv` job in `build.yml`.
+- One codebase, two Automate lines: `-p:AutomateMajor=17|18` (default 18) picks the Automate and CMS ranges, the version, the `AUTOMATE_17`/`AUTOMATE_18` constant and the lock file (`packages.<line>.lock.json`). `eng/lines.txt` lists the lines that build and ship (18 and 17). The 18 ranges are `Umbraco.Cms.Core [18.3.0, 19.0.0)` and `Umbraco.Automate.Core [18.5.1, 19.0.0)`; the 17 ranges are `[17.8.0, 18.0.0)` and `[17.5.1, 18.0.0)`. Adding a line means adding it to `eng/lines.txt`, committing its lock files, adding them to the `osv` job in `build.yml` and adding its `build (<line>, floor|latest)` checks to the `main` ruleset. One `v18.M.P` tag packs every line, so a 17 package ships as `17.M.P` from the next 18 tag (`publish.yml` rejects a tag that is not the newest line's).
 - `-p:AutomateFloat=true` is the CI latest leg: floating `<line>.*`, no lock file, never committed.
 - Versions: `publish.yml` derives `<line>.<minor>.<patch>[-suffix]` from the tag `vX.Y.Z[-suffix]` and passes it to `build/pack.sh`; `Directory.Build.props` only holds the defaults. The tag needs a `## X.Y.Z` heading in `CHANGELOG.md`.
 - The NuGet ID, Automate aliases (`community.deployHooks.*`), settings and output property names are permanent once released.
-- The credential helper (`CredentialHelper/DeployHooksCredentialStore.cs` and the two suites in `*.Tests/CredentialHelperContract/`) is a verbatim copy from the Jira repo at `credential-helper-1.0.1`. Never edit it; `bash build/check-contract-copy.sh` proves it.
+- The credential helper (`CredentialHelper/DeployHooksCredentialStore.cs` and the two suites in `*.Tests/CredentialHelperContract/`) is a verbatim copy from the Jira repo at `credential-helper-1.0.2`. Never edit it; `bash build/check-contract-copy.sh` proves it.
 
 ## Commands
 
@@ -27,13 +27,13 @@ dotnet user-secrets set "Umbraco:CMS:Unattended:UnattendedUserPassword" "<pw>" -
 dotnet dev-certs https && dotnet run --project demo/Umbraco.Community.Automate.DeployHooks.DemoSite   # https://localhost:44331/umbraco
 # e2e (demo running; env vars as in tests/e2e/.env.example)
 cd tests/e2e && npm ci --ignore-scripts && npx playwright install chromium && npx playwright test --reporter=line
-bash build/check-vulnerable.sh
+bash build/check-vulnerable.sh --line 17   # restores that line (locked) and audits it; a bare call audits 18 only
 ```
 
 ## Releasing
 
 - Add the `## X.Y.Z` heading to `CHANGELOG.md`.
-- `bash build/check-vulnerable.sh` exits 0, and `bash build/pack.sh 18 <dir> <minor> <patch>` then `bash build/check-packed-readme.sh <dir>/*.nupkg` pass.
+- `bash build/check-vulnerable.sh --line <line>` exits 0 for every line, and `bash build/pack.sh 18 <dir> <minor> <patch>` then `bash build/check-packed-readme.sh <dir>/*.nupkg` pass.
 - Run the **Release checks** workflow by hand on the release branch (SQL Server integration, and e2e if present). Never on PRs. Re-run after a new Umbraco minor.
 - Squash-merge, tag `vX.Y.Z` on the merge commit; `publish.yml` publishes with Trusted Publishing. Then `gh release create`, and mark the newest Umbraco line's release as Latest.
 - Stable from the first real public release unless the API is still moving (`.github/REPO-SETUP.md` step 10); after that, no breaking changes within a major.
