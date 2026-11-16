@@ -76,7 +76,7 @@ jobs:
           for line in $LINES; do
             dotnet restore src/Umbraco.Community.Automate.DeployHooks.slnx --locked-mode -p:AutomateMajor="$line"
             dotnet test src/Umbraco.Community.Automate.DeployHooks.slnx -c Release --no-restore -p:AutomateMajor="$line" --logger "console;verbosity=minimal"
-            bash build/check-vulnerable.sh
+            bash build/check-vulnerable.sh --line "$line"
             bash build/pack.sh "$line" ./artifacts "$MINOR" "$PATCH" ${SUFFIX:+"$SUFFIX"}
           done
           for pkg in ./artifacts/*.nupkg; do bash build/check-packed-readme.sh "$pkg"; done

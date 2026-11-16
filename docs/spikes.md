@@ -155,3 +155,10 @@ Closes the residual from the 17 delta review (and from the 18 sign-off): `Outbou
 - `AllowedRevalidateHosts` still defaults to any https host, so production sites should set it.
 
 Release checks now run SQL Server integration and e2e once per line in `eng/lines.txt` (18 and 17), floor and latest for e2e. Dispatched on the PR branch, all six jobs passed: SQL Server integration on 17 and 18, and e2e on 17 and 18 at the floor and at the latest. **[verified]**
+
+## Vulnerability audit now covers each line (2026-11-16)
+
+- **Finding:** `dotnet list package` runs its own implicit restore with the default line (18), so every earlier `check-vulnerable.sh` call audited the 18 graph, including the `deps` step labelled 17 and the per-line audit in `publish.yml`. **[verified]** (after `--line 17` the assets file held Automate 17.5.1 only once the list step stopped restoring).
+- **What still covered 17:** `osv-scanner` scans the four `packages.17.lock.json` files explicitly on every PR, and those are the floor versions the 17 package depends on. It passed for `17.0.1`. **[verified]**
+- **Fix:** `build/check-vulnerable.sh --line N` does the locked restore for that line and lists with `--no-restore`; `build.yml` loops over `eng/lines.txt` and `publish.yml` passes the line it is packing.
+- **Result:** `--line 17` and `--line 18` both report no vulnerable packages in 4 projects, with the right Automate version in the assets file each time (17.5.1 and 18.5.1). **[verified]**

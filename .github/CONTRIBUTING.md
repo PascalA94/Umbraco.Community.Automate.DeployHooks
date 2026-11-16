@@ -4,8 +4,9 @@ Issues and pull requests are welcome. For anything bigger than a small fix, open
 
 ## Branches
 
-- `main` is the Umbraco 18 line (package 18.x). Another Umbraco line, if there is one, lives on its own branch (for example `v17`).
-- Open pull requests against `main`. Fixes that apply to every line are then ported. Code under `src/Umbraco.Community.Automate.DeployHooks/Core/` stays identical on every line.
+- `main` builds every Umbraco line in `eng/lines.txt` from one codebase (package 18.x for Umbraco 18, 17.x for Umbraco 17). There are no per-line branches.
+- Open pull requests against `main`. A change applies to every line, so CI builds and tests each one. Use `#if AUTOMATE_17` / `AUTOMATE_18` only where the two Automate versions really differ (today only a test does), and never in code that guards credentials or outbound requests.
+- Test a single line with `bash build/test.sh 17` (or `18`). With no argument it runs every line.
 
 ## Build and test
 
