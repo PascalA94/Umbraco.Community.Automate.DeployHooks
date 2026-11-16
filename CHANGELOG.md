@@ -2,6 +2,10 @@
 
 Versions follow `<Umbraco major>.<minor>.<patch>`. Before tagging `vX.Y.Z`, rename "Unreleased" to `## X.Y.Z` (the publish workflow looks for that exact heading line).
 
+## Unreleased
+
+- Tests and CI only: an integration test that Automate's no-redirect client refuses loopback and private destinations and does not follow redirects, and Release checks now cover every line in `eng/lines.txt`.
+
 ## 18.0.1
 
 One tag packs both lines, so this release ships `18.0.1` and `17.0.1` together. `18.0.1` has no functional change from `18.0.0`.
