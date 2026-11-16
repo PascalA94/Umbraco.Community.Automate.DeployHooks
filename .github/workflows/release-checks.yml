@@ -2,7 +2,8 @@ name: Release checks
 
 on:
   # Run by hand before every release (Actions -> Release checks -> Run workflow), and after a new Umbraco minor.
-  # Not on PRs or a schedule: e2e and SQL Server take 10-25 minutes and catch Umbraco or database regressions.
+  # Not on PRs or a schedule: e2e and SQL Server take 10-25 minutes per line (every line in eng/lines.txt runs in parallel)
+  # and catch Umbraco or database regressions.
   workflow_dispatch:
 
 permissions:
@@ -13,12 +14,44 @@ env:
   DOTNET_CLI_TELEMETRY_OPTOUT: true
 
 jobs:
-  integration-sqlserver:
+  # Same reader as build.yml: eng/lines.txt is the single list of lines, so a new line needs no edit here.
+  lines:
     runs-on: ubuntu-latest
-    env:
-      Tests__Database__DatabaseType: SqlServer
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      matrix: ${{ steps.read.outputs.matrix }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: read
+        # Only digits are accepted, so a bad edit cannot reach a shell command.
+        run: |
+          set -euo pipefail
+          lines="$(grep -vE '^\s*(#|$)' eng/lines.txt | tr -d ' \r')"
+          if grep -qvE '^[0-9]+$' <<<"$lines"; then
+            echo "eng/lines.txt must hold one numeric line per row" >&2
+            exit 1
+          fi
+          echo "matrix=$(jq -cn --arg l "$lines" '$l | split("\n")')" >> "$GITHUB_OUTPUT"
+
+  # Floor only (locked restore) per line; the latest leg is covered by build.yml's SQLite tests and by e2e below.
+  integration-sqlserver:
+    needs: lines
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        line: ${{ fromJSON(needs.lines.outputs.matrix) }}
+    env:
+      Tests__Database__DatabaseType: SqlServer
+      LINE: ${{ matrix.line }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       # SQL Server gets a random password per run, masked in the logs; nothing is stored in the repo.
       # docker run (not a services: block) so the password can be random.
@@ -44,29 +77,32 @@ jobs:
           cache-dependency-path: '**/packages.*.lock.json'
 
       - name: Restore (locked, floor)
-        run: dotnet restore src/Umbraco.Community.Automate.DeployHooks.slnx --locked-mode
+        run: dotnet restore src/Umbraco.Community.Automate.DeployHooks.slnx --locked-mode "-p:AutomateMajor=$LINE"
 
       - name: Build
-        run: dotnet build src/Umbraco.Community.Automate.DeployHooks.slnx -c Release --no-restore
+        run: dotnet build src/Umbraco.Community.Automate.DeployHooks.slnx -c Release --no-restore "-p:AutomateMajor=$LINE"
 
       - name: Integration tests on SQL Server
-        run: dotnet test src/Umbraco.Community.Automate.DeployHooks.IntegrationTests -c Release --no-build --logger "trx;LogFileName=sqlserver.trx"
+        run: dotnet test src/Umbraco.Community.Automate.DeployHooks.IntegrationTests -c Release --no-build "-p:AutomateMajor=$LINE" --logger "trx;LogFileName=sqlserver.trx"
 
       - name: Upload test results
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
-          name: release-checks-sqlserver
+          name: release-checks-sqlserver-${{ matrix.line }}
           path: '**/*.trx'
 
-  # Playwright against the demo site, at the floor and at the newest 18.x (AutomateFloat=true floats the CMS and Automate).
+  # Playwright against the demo site per line, at the floor and at the newest <line>.x (AutomateFloat=true floats the CMS and Automate).
   e2e:
+    needs: lines
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
+        line: ${{ fromJSON(needs.lines.outputs.matrix) }}
         leg: [floor, latest]
     env:
+      LINE: ${{ matrix.line }}
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__umbracoDbDSN_ProviderName: Microsoft.Data.SqlClient
       # Umbraco's OpenIddict server refuses plain HTTP (ID2083), so the demo runs on HTTPS with the .NET dev certificate.
@@ -76,6 +112,8 @@ jobs:
       ADMIN_EMAIL: admin@example.test
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       # SQL Server and every login get a random password per run, masked in the logs; nothing is stored in the repo.
       - name: Start SQL Server with a random throwaway password
@@ -121,11 +159,11 @@ jobs:
 
       - name: Restore demo (floor, locked)
         if: matrix.leg == 'floor'
-        run: dotnet restore demo/Umbraco.Community.Automate.DeployHooks.DemoSite --locked-mode
+        run: dotnet restore demo/Umbraco.Community.Automate.DeployHooks.DemoSite --locked-mode "-p:AutomateMajor=$LINE"
 
-      - name: Restore demo (latest 18.x, unlocked)
+      - name: Restore demo (latest, floating)
         if: matrix.leg == 'latest'
-        run: dotnet restore demo/Umbraco.Community.Automate.DeployHooks.DemoSite -p:AutomateFloat=true --force-evaluate
+        run: dotnet restore demo/Umbraco.Community.Automate.DeployHooks.DemoSite --force-evaluate "-p:AutomateMajor=$LINE" -p:AutomateFloat=true
 
       # Kestrel needs a certificate for HTTPS; the dev certificate is enough (Playwright ignores HTTPS errors).
       - name: Create the HTTPS dev certificate
@@ -134,8 +172,9 @@ jobs:
       - name: Start the demo site
         run: |
           start() {
+            # dotnet run rebuilds, so it needs the same line and float properties the restore used.
             dotnet run --project demo/Umbraco.Community.Automate.DeployHooks.DemoSite --no-restore --no-launch-profile --urls https://localhost:44331 \
-              ${{ matrix.leg == 'latest' && '-p:AutomateFloat=true' || '' }} >> demo.log 2>&1 &
+              "-p:AutomateMajor=$LINE" -p:AutomateFloat=${{ matrix.leg == 'latest' }} >> demo.log 2>&1 &
             for _ in $(seq 1 120); do curl -skf -o /dev/null https://localhost:44331/umbraco && return 0; sleep 2; done
             return 1
           }
@@ -154,7 +193,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: e2e-${{ matrix.leg }}
+          name: e2e-${{ matrix.line }}-${{ matrix.leg }}
           path: |
             tests/e2e/playwright-report
             tests/e2e/test-results
