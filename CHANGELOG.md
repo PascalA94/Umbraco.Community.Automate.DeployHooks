@@ -12,6 +12,7 @@ Built against Umbraco 19.0.0-rc1, not yet verified on 19 stable. Release candida
 
 ## Unreleased
 
+- Raised the Umbraco CMS floors to 17.8.2 and 18.3.2, above GHSA-348f-9mg8-rhv4 (Examine dashboard and Management API could show sensitive member values; this package does not use them). The 17 and 18 packages now require `Umbraco.Cms.Core [17.8.2, 18.0.0)` and `[18.3.2, 19.0.0)`.
 - Tests and CI only: an integration test that Automate's no-redirect client refuses loopback and private destinations and does not follow redirects, and Release checks now cover every line in `eng/lines.txt`.
 
 ## 18.0.1
