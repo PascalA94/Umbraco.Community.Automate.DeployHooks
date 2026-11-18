@@ -3,7 +3,9 @@ import { expect, type Page } from '@playwright/test';
 /**
  * Collects console errors and page errors. Every spec ends with assertNoErrors().
  * The backoffice's silent token refresh before login logs "Token request failed: 400" from core; that one is
- * expected before sign-in and ignored, nothing else is.
+ * expected before sign-in and ignored, nothing else is. On Umbraco 19 the login screen also calls
+ * user/current/configuration before sign-in and gets a 401, so that status is ignored the same way, and only
+ * while the page is not yet in a backoffice section.
  */
 export function consoleGuard(page: Page) {
   const errors: string[] = [];
@@ -11,7 +13,7 @@ export function consoleGuard(page: Page) {
     if (m.type() !== 'error') return;
     const text = m.text();
     // Before sign-in completes the page is not yet in a backoffice section.
-    if (/Token request failed: 400|status of 400 \(\)/.test(text) && !page.url().includes('/umbraco/section/')) return;
+    if (/Token request failed: 400|status of (400|401) \(\)/.test(text) && !page.url().includes('/umbraco/section/')) return;
     errors.push(text);
   });
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
