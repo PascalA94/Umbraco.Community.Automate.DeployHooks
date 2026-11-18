@@ -56,6 +56,7 @@ jobs:
             echo "suffix=${BASH_REMATCH[5]}"
             echo "lines=$(tr '\n' ' ' <<<"$lines_sel")"
             echo "sdk=$sdk"
+            echo "sdk_major=${sdk%%.*}"
           } >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
@@ -63,6 +64,13 @@ jobs:
           # 19 targets net11.0 and needs the 11 SDK; a v18 tag only packs 17 and 18. The tag is parsed first, so the SDK follows it.
           dotnet-version: ${{ steps.tag.outputs.sdk }}
 
+      - name: Check the SDK major
+        env:
+          EXPECTED: ${{ steps.tag.outputs.sdk_major }}
+        run: |
+          # global.json rolls forward to the newest installed major, so assert the line got the SDK it was tested on.
+          actual="$(dotnet --version)"
+          [[ "$actual" == "$EXPECTED".* ]] || { echo "Expected a .NET $EXPECTED SDK, got $actual" >&2; exit 1; }
       - name: Tag is on main and in the changelog
         env:
           TAG: ${{ github.ref_name }}

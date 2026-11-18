@@ -72,6 +72,13 @@ jobs:
           cache: true
           cache-dependency-path: '**/packages.*.lock.json'
 
+      - name: Check the SDK major
+        env:
+          EXPECTED: ${{ matrix.line == '19' && '11' || '10' }}
+        run: |
+          # global.json rolls forward to the newest installed major, so assert the line got the SDK it was tested on.
+          actual="$(dotnet --version)"
+          [[ "$actual" == "$EXPECTED".* ]] || { echo "Expected a .NET $EXPECTED SDK, got $actual" >&2; exit 1; }
       - name: Restore (floor, locked)
         if: matrix.leg == 'floor'
         run: dotnet restore src/Umbraco.Community.Automate.DeployHooks.slnx --locked-mode "-p:AutomateMajor=$LINE"
@@ -175,6 +182,13 @@ jobs:
           cache-dependency-path: '**/packages.*.lock.json'
       # check-vulnerable.sh --line does the locked restore for that line itself and audits that restore. This job stays on
       # the 10 SDK and covers the lines below 19; "deps (19)" covers 19 on the 11 SDK, so 17 and 18 are never audited on the 11 SDK.
+      - name: Check the SDK major
+        env:
+          EXPECTED: 10
+        run: |
+          # global.json rolls forward to the newest installed major, so assert the line got the SDK it was tested on.
+          actual="$(dotnet --version)"
+          [[ "$actual" == "$EXPECTED".* ]] || { echo "Expected a .NET $EXPECTED SDK, got $actual" >&2; exit 1; }
       - name: Vulnerable packages per line (direct and transitive)
         run: |
           set -euo pipefail
@@ -199,5 +213,12 @@ jobs:
           dotnet-version: 11.x
           cache: true
           cache-dependency-path: '**/packages.*.lock.json'
+      - name: Check the SDK major
+        env:
+          EXPECTED: 11
+        run: |
+          # global.json rolls forward to the newest installed major, so assert the line got the SDK it was tested on.
+          actual="$(dotnet --version)"
+          [[ "$actual" == "$EXPECTED".* ]] || { echo "Expected a .NET $EXPECTED SDK, got $actual" >&2; exit 1; }
       - name: Vulnerable packages on line 19 (direct and transitive)
         run: bash build/check-vulnerable.sh --line 19

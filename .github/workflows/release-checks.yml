@@ -76,6 +76,13 @@ jobs:
           cache: true
           cache-dependency-path: '**/packages.*.lock.json'
 
+      - name: Check the SDK major
+        env:
+          EXPECTED: ${{ matrix.line == '19' && '11' || '10' }}
+        run: |
+          # global.json rolls forward to the newest installed major, so assert the line got the SDK it was tested on.
+          actual="$(dotnet --version)"
+          [[ "$actual" == "$EXPECTED".* ]] || { echo "Expected a .NET $EXPECTED SDK, got $actual" >&2; exit 1; }
       - name: Restore (locked, floor)
         run: dotnet restore src/Umbraco.Community.Automate.DeployHooks.slnx --locked-mode "-p:AutomateMajor=$LINE"
 
@@ -152,6 +159,13 @@ jobs:
           cache: true
           cache-dependency-path: '**/packages.*.lock.json'
 
+      - name: Check the SDK major
+        env:
+          EXPECTED: ${{ matrix.line == '19' && '11' || '10' }}
+        run: |
+          # global.json rolls forward to the newest installed major, so assert the line got the SDK it was tested on.
+          actual="$(dotnet --version)"
+          [[ "$actual" == "$EXPECTED".* ]] || { echo "Expected a .NET $EXPECTED SDK, got $actual" >&2; exit 1; }
       - name: Setup Node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
