@@ -6,7 +6,7 @@
 
     Lock files describe the floor and are committed per line (packages.<line>.lock.json). The latest CI leg passes
     AutomateFloat=true, which floats Automate and the CMS to <line>.* and never writes a committed lock file.
-    Floors never go below 17.8.0 / 18.3.0: they sit above the 27 Oct 2026 advisories. Lowering one needs a security review.
+    Floors never go below 17.8.2 / 18.3.2: they sit above the 27 Oct and 17 Nov 2026 advisories (GHSA-348f-9mg8-rhv4 affects <= 17.8.1 and <= 18.3.1). Lowering one needs a security review.
     The 19 floor is the release candidate 19.0.0-rc1 until 19.0.0 ships.
   -->
   <PropertyGroup>
@@ -20,14 +20,14 @@
   <PropertyGroup Condition="'$(AutomateMajor)' == '18'">
     <AutomateVersion>18.5.1</AutomateVersion>
     <AutomateRange>[18.5.1, 19.0.0)</AutomateRange>
-    <UmbracoCmsVersion>18.3.0</UmbracoCmsVersion>
-    <UmbracoCmsRange>[18.3.0, 19.0.0)</UmbracoCmsRange>
+    <UmbracoCmsVersion>18.3.2</UmbracoCmsVersion>
+    <UmbracoCmsRange>[18.3.2, 19.0.0)</UmbracoCmsRange>
   </PropertyGroup>
   <PropertyGroup Condition="'$(AutomateMajor)' == '17'">
     <AutomateVersion>17.5.1</AutomateVersion>
     <AutomateRange>[17.5.1, 18.0.0)</AutomateRange>
-    <UmbracoCmsVersion>17.8.0</UmbracoCmsVersion>
-    <UmbracoCmsRange>[17.8.0, 18.0.0)</UmbracoCmsRange>
+    <UmbracoCmsVersion>17.8.2</UmbracoCmsVersion>
+    <UmbracoCmsRange>[17.8.2, 18.0.0)</UmbracoCmsRange>
   </PropertyGroup>
   <PropertyGroup Condition="'$(AutomateMajor)' == '19'">
     <AutomateVersion>19.0.0-rc1</AutomateVersion>

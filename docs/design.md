@@ -43,7 +43,7 @@ Real use case: a headless Next.js site (stack to confirm, Q1).
 ## 2. Constraints
 
 - **v18 line first, then 17.** One codebase with Jira's `AutomateMajor=17|18` switch. `eng/lines.txt` started as `18`; the 17 line shipped by adding `17` to it, with its lock files. One `v18.M.P` tag packs both lines (`17.M.P` and `18.M.P`).
-- **Floors:** `Umbraco.Cms.Core [18.3.0, 19.0.0)` and `Umbraco.Automate.Core [18.5.1, 19.0.0)`. The 17 ranges are `Umbraco.Cms.Core [17.8.0, 18.0.0)` and `Umbraco.Automate.Core [17.5.1, 18.0.0)`.
+- **Floors:** `Umbraco.Cms.Core [18.3.2, 19.0.0)` and `Umbraco.Automate.Core [18.5.1, 19.0.0)`. The 17 ranges are `Umbraco.Cms.Core [17.8.2, 18.0.0)` and `Umbraco.Automate.Core [17.5.1, 18.0.0)`.
 - `net10.0`, plain `Microsoft.NET.Sdk`, no client code, no controllers, no Razor.
 - **Secret custody:** the frozen credential helper, copied verbatim from Jira at tag `credential-helper-1.0.0`. Prefix outside `AllowedConfigurationKeyPrefixes`. S7 gate is **GO on both lines** (`m0-result.md`).
 - **Pitfalls:** P2 (no statics holding scoped or mutable state; every service a singleton over singleton-safe dependencies), P1 (DI only), P7 (no heavy start-up work), S1/S3/S5 do not apply (no controllers, editors or surface controllers).
