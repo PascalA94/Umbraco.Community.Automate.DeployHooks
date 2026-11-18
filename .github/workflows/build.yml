@@ -72,6 +72,11 @@ jobs:
           cache: true
           cache-dependency-path: '**/packages.*.lock.json'
 
+      - name: Pin the SDK to the 10 line
+        if: matrix.line != '19'
+        # Hosted runners ship SDK 11 too, and global.json (latestMajor, needed for line 19) would pick it. 17 and 18
+        # are tested and released on SDK 10, so pin this job's copy; it is never committed.
+        run: printf '{"sdk":{"version":"10.0.100","rollForward":"latestFeature","allowPrerelease":false}}\n' > global.json
       - name: Check the SDK major
         env:
           EXPECTED: ${{ matrix.line == '19' && '11' || '10' }}
@@ -182,6 +187,10 @@ jobs:
           cache-dependency-path: '**/packages.*.lock.json'
       # check-vulnerable.sh --line does the locked restore for that line itself and audits that restore. This job stays on
       # the 10 SDK and covers the lines below 19; "deps (19)" covers 19 on the 11 SDK, so 17 and 18 are never audited on the 11 SDK.
+      - name: Pin the SDK to the 10 line
+        # Hosted runners ship SDK 11 too, and global.json (latestMajor, needed for line 19) would pick it. 17 and 18
+        # are tested and released on SDK 10, so pin this job's copy; it is never committed.
+        run: printf '{"sdk":{"version":"10.0.100","rollForward":"latestFeature","allowPrerelease":false}}\n' > global.json
       - name: Check the SDK major
         env:
           EXPECTED: 10
