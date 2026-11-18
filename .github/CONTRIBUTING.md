@@ -4,9 +4,9 @@ Issues and pull requests are welcome. For anything bigger than a small fix, open
 
 ## Branches
 
-- `main` builds every Umbraco line in `eng/lines.txt` from one codebase (package 18.x for Umbraco 18, 17.x for Umbraco 17). There are no per-line branches.
-- Open pull requests against `main`. A change applies to every line, so CI builds and tests each one. Use `#if AUTOMATE_17` / `AUTOMATE_18` only where the two Automate versions really differ (today only a test does), and never in code that guards credentials or outbound requests.
-- Test a single line with `bash build/test.sh 17` (or `18`). With no argument it runs every line.
+- `main` builds every Umbraco line in `eng/lines.txt` from one codebase (package 19.x for Umbraco 19, 18.x for Umbraco 18, 17.x for Umbraco 17). There are no per-line branches.
+- Open pull requests against `main`. A change applies to every line, so CI builds and tests each one. Use `#if AUTOMATE_17` / `AUTOMATE_18` / `AUTOMATE_19` only where the two Automate versions really differ (today only a test does), and never in code that guards credentials or outbound requests.
+- Test a single line with `bash build/test.sh 17` (or `18`; 19 needs the .NET 11 SDK first on PATH). With no argument it runs every line.
 
 ## Build and test
 

@@ -26,13 +26,22 @@
     Re-check on every Automate or CMS bump with build/check-vulnerable.sh; delete a pin once upstream has caught up
     (a stale pin below what upstream needs fails restore with NU1109, so it cannot hide).
       MessagePack 3.1.11                         GHSA-qhrr-8q5h-9q3h (moderate), fixed in 3.1.9; 3.1.11 is what Umbraco.Cms.Tests.Integration 18.3.0 needs
+                                                 (19: 3.1.12, what Umbraco.Cms.Tests.Integration 19.0.0-rc1 needs)
       OpenTelemetry.Api 1.15.3                   GHSA-g94r-2vxg-569j (moderate), fixed in 1.15.3
       System.Security.Cryptography.Xml 10.0.13   GHSA-r955-8q5j-3h83, GHSA-7hqp-7c5m-4vq6, GHSA-c399-9853-6jmj (high), fixed in 10.0.13
+                                                 (19: 11.0.0, what Umbraco.Cms.Api.Management 19.0.0-rc1 needs)
+    The pins differ per line, so the 17 and 18 lock files stay as they are.
   -->
-  <ItemGroup>
+  <ItemGroup Condition="'$(AutomateMajor)' != '19'">
     <PackageVersion Include="MessagePack" Version="3.1.11" />
-    <PackageVersion Include="OpenTelemetry.Api" Version="1.15.3" />
     <PackageVersion Include="System.Security.Cryptography.Xml" Version="10.0.13" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(AutomateMajor)' == '19'">
+    <PackageVersion Include="MessagePack" Version="3.1.12" />
+    <PackageVersion Include="System.Security.Cryptography.Xml" Version="11.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageVersion Include="OpenTelemetry.Api" Version="1.15.3" />
   </ItemGroup>
 
   <ItemGroup>

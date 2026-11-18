@@ -1,16 +1,19 @@
 <Project>
   <!--
-    One codebase, two Umbraco Automate lines. -p:AutomateMajor=17|18 picks the dependency set, the closed version
-    ranges, the package version and the AUTOMATE_17 / AUTOMATE_18 constant. Only the 18 line ships for now
-    (eng/lines.txt); the 17 values exist so a v17 line is a one-line change later.
+    One codebase, three Umbraco Automate lines. -p:AutomateMajor=17|18|19 picks the dependency set, the closed version
+    ranges, the package version and the AUTOMATE_17 / AUTOMATE_18 / AUTOMATE_19 constant. 17 and 18 ship from one
+    v18.* tag; 19 is the release candidate line and ships from v19.* tags only (eng/lines.txt lists every line).
 
     Lock files describe the floor and are committed per line (packages.<line>.lock.json). The latest CI leg passes
     AutomateFloat=true, which floats Automate and the CMS to <line>.* and never writes a committed lock file.
     Floors never go below 17.8.0 / 18.3.0: they sit above the 27 Oct 2026 advisories. Lowering one needs a security review.
+    The 19 floor is the release candidate 19.0.0-rc1 until 19.0.0 ships.
   -->
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
     <AutomateMajor Condition="'$(AutomateMajor)' == ''">18</AutomateMajor>
+    <!-- After the AutomateMajor default, so the condition never sees an empty value. -->
+    <TargetFramework Condition="'$(AutomateMajor)' == '19'">net11.0</TargetFramework>
+    <TargetFramework Condition="'$(AutomateMajor)' != '19'">net10.0</TargetFramework>
     <AutomateFloat Condition="'$(AutomateFloat)' == ''">false</AutomateFloat>
   </PropertyGroup>
 
@@ -26,10 +29,16 @@
     <UmbracoCmsVersion>17.8.0</UmbracoCmsVersion>
     <UmbracoCmsRange>[17.8.0, 18.0.0)</UmbracoCmsRange>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(AutomateMajor)' == '19'">
+    <AutomateVersion>19.0.0-rc1</AutomateVersion>
+    <AutomateRange>[19.0.0-rc1, 20.0.0)</AutomateRange>
+    <UmbracoCmsVersion>19.0.0-rc1</UmbracoCmsVersion>
+    <UmbracoCmsRange>[19.0.0-rc1, 20.0.0)</UmbracoCmsRange>
+  </PropertyGroup>
 
   <!-- Fails fast: an unknown line would otherwise restore with empty version ranges. -->
-  <Target Name="ValidateAutomateMajor" BeforeTargets="CollectPackageReferences;_GenerateRestoreGraph" Condition="'$(AutomateMajor)' != '17' and '$(AutomateMajor)' != '18'">
-    <Error Text="AutomateMajor must be 17 or 18 (was '$(AutomateMajor)')." />
+  <Target Name="ValidateAutomateMajor" BeforeTargets="CollectPackageReferences;_GenerateRestoreGraph" Condition="'$(AutomateMajor)' != '17' and '$(AutomateMajor)' != '18' and '$(AutomateMajor)' != '19'">
+    <Error Text="AutomateMajor must be 17, 18 or 19 (was '$(AutomateMajor)')." />
   </Target>
 
   <PropertyGroup>
@@ -44,6 +53,13 @@
     <UmbracoCmsVersionSpec>$(AutomateMajor).*</UmbracoCmsVersionSpec>
     <UmbracoTestVersion>$(AutomateMajor).*</UmbracoTestVersion>
     <UmbracoDemoVersion>$(AutomateMajor).*</UmbracoDemoVersion>
+  </PropertyGroup>
+  <!-- A prerelease only exists on 19, and 19.* does not match 19.0.0-rc1 (NU1102). Remove at 19.0.0 stable. -->
+  <PropertyGroup Condition="'$(AutomateFloat)' == 'true' and '$(AutomateMajor)' == '19'">
+    <AutomateVersionSpec>$(AutomateMajor).*-*</AutomateVersionSpec>
+    <UmbracoCmsVersionSpec>$(AutomateMajor).*-*</UmbracoCmsVersionSpec>
+    <UmbracoTestVersion>$(AutomateMajor).*-*</UmbracoTestVersion>
+    <UmbracoDemoVersion>$(AutomateMajor).*-*</UmbracoDemoVersion>
   </PropertyGroup>
 
   <!-- Version: <line>.<minor>.<patch>; pre-releases pass -p:VersionSuffix=beta.1 -->

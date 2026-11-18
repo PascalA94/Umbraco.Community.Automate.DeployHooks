@@ -13,6 +13,9 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
     <PackageTags>umbraco umbraco-marketplace umbraco-automate automate vercel netlify cloudflare-pages nextjs headless deploy</PackageTags>
+    <!-- No Marketplace tag on a release candidate. Remove with the label at 19.0.0 stable. -->
+    <PackageTags Condition="'$(AutomateMajor)' == '19'">$(PackageTags.Replace('umbraco-marketplace ', ''))</PackageTags>
+    <Description Condition="'$(AutomateMajor)' == '19'">$(Description) Line 19 is a release candidate built against Umbraco 19.0.0-rc1.</Description>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
 

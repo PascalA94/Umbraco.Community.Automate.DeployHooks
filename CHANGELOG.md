@@ -1,6 +1,14 @@
 # Changelog
 
-Versions follow `<Umbraco major>.<minor>.<patch>`. Before tagging `vX.Y.Z`, rename "Unreleased" to `## X.Y.Z` (the publish workflow looks for that exact heading line).
+Versions follow `<Umbraco major>.<minor>.<patch>`. A `v19.*` tag ships line 19 only; a `v18.*` tag ships 18 and 17 together. Before tagging `vX.Y.Z`, rename "Unreleased" to `## X.Y.Z` (the publish workflow looks for that exact heading line).
+
+## 19.0.0-rc.1
+
+Built against Umbraco 19.0.0-rc1, not yet verified on 19 stable. Release candidate: line 19 only, no Marketplace listing.
+
+- Umbraco 19 line (`Umbraco.Cms.Core [19.0.0-rc1, 20.0.0)`, `Umbraco.Automate.Core [19.0.0-rc1, 20.0.0)`, .NET 11). Same connections, actions, coalescing and settings as 18.
+- `Dropdown.Single` for the provider field on 19 (the plain dropdown is multi-select there).
+- Credential helper contract 1.0.3 (test-only; the store's behaviour is unchanged).
 
 ## Unreleased
 

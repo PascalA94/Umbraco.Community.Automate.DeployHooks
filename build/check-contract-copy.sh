@@ -7,9 +7,10 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-TAG="credential-helper-1.0.2"
-# The published hash for this tag (contract header). Change both together when the helper is re-copied.
-EXPECTED_HASH="4067bab2cc1fd0eb86d2f6bb717869bc44af0dae0cc7a095c206a740bd4d78cd"
+TAG="credential-helper-1.0.3"
+# The published hash and tag commit for this tag (contract header). Change TAG, EXPECTED_HASH and EXPECTED_COMMIT together when the helper is re-copied.
+EXPECTED_HASH="5e66dff814796722e4fb61695825476c9fdae14803a7c9de8d89e98889824eb2"
+EXPECTED_COMMIT="4425ea5577a44ea0ccb56513b0be9a5977482996"
 JIRA_SOURCE="${JIRA_SOURCE:-https://github.com/PascalA94/Umbraco.Community.Automate.Jira}"
 
 pkg="src/Umbraco.Community.Automate.DeployHooks/CredentialHelper"
@@ -18,6 +19,8 @@ work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
 git clone --quiet -c advice.detachedHead=false --depth 1 --branch "$TAG" "$JIRA_SOURCE" "$work/jira"
+# A tag can be moved, and git clone --branch prefers a branch of the same name: pin the commit too.
+[ "$(git -C "$work/jira" rev-parse HEAD)" = "$EXPECTED_COMMIT" ] || { echo "check-contract-copy: $TAG is at a different commit than $EXPECTED_COMMIT" >&2; exit 1; }
 jira_store="$work/jira/src/Umbraco.Community.Automate.Jira/CredentialHelper/JiraCredentialStore.cs"
 jira_tests="$work/jira/tests/Umbraco.Community.Automate.Jira.Tests/CredentialHelperContract"
 status=0

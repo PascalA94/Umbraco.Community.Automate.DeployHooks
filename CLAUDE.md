@@ -9,11 +9,11 @@ Design `docs/design.md`, plan `docs/plan.md`, spikes `docs/spikes.md`. Maintaine
 
 ## Lines and versions
 
-- One codebase, two Automate lines: `-p:AutomateMajor=17|18` (default 18) picks the Automate and CMS ranges, the version, the `AUTOMATE_17`/`AUTOMATE_18` constant and the lock file (`packages.<line>.lock.json`). `eng/lines.txt` lists the lines that build and ship (18 and 17). The 18 ranges are `Umbraco.Cms.Core [18.3.0, 19.0.0)` and `Umbraco.Automate.Core [18.5.1, 19.0.0)`; the 17 ranges are `[17.8.0, 18.0.0)` and `[17.5.1, 18.0.0)`. Adding a line means adding it to `eng/lines.txt`, committing its lock files, adding them to the `osv` job in `build.yml` and adding its `build (<line>, floor|latest)` checks to the `main` ruleset. One `v18.M.P` tag packs every line, so a 17 package ships as `17.M.P` from the next 18 tag (`publish.yml` rejects a tag that is not the newest line's).
+- One codebase, three Automate lines: `-p:AutomateMajor=17|18|19` (default 18) picks the Automate and CMS ranges, the version, the `AUTOMATE_17`/`AUTOMATE_18`/`AUTOMATE_19` constant, the TFM (net11.0 on 19, net10.0 otherwise) and the lock file (`packages.<line>.lock.json`). `eng/lines.txt` lists the lines that build and ship (18, 17 and 19). 19 builds with the .NET 11 SDK (put it first on PATH), 17 and 18 with the .NET 10 SDK. The 18 ranges are `Umbraco.Cms.Core [18.3.0, 19.0.0)` and `Umbraco.Automate.Core [18.5.1, 19.0.0)`; the 17 ranges are `[17.8.0, 18.0.0)` and `[17.5.1, 18.0.0)`; the 19 ranges are `[19.0.0-rc1, 20.0.0)` for both. Adding a line means adding it to `eng/lines.txt`, committing its lock files, adding them to the `osv` job in `build.yml` and adding its `build (<line>, floor|latest)` checks to the `main` ruleset. A `v18.M.P` tag packs 17 and 18 (a 17 package ships as `17.M.P` from the 18 tag); a `v19.M.P[-suffix]` tag packs line 19 only. `publish.yml` rejects any other major.
 - `-p:AutomateFloat=true` is the CI latest leg: floating `<line>.*`, no lock file, never committed.
 - Versions: `publish.yml` derives `<line>.<minor>.<patch>[-suffix]` from the tag `vX.Y.Z[-suffix]` and passes it to `build/pack.sh`; `Directory.Build.props` only holds the defaults. The tag needs a `## X.Y.Z` heading in `CHANGELOG.md`.
 - The NuGet ID, Automate aliases (`community.deployHooks.*`), settings and output property names are permanent once released.
-- The credential helper (`CredentialHelper/DeployHooksCredentialStore.cs` and the two suites in `*.Tests/CredentialHelperContract/`) is a verbatim copy from the Jira repo at `credential-helper-1.0.2`. Never edit it; `bash build/check-contract-copy.sh` proves it.
+- The credential helper (`CredentialHelper/DeployHooksCredentialStore.cs` and the two suites in `*.Tests/CredentialHelperContract/`) is a verbatim copy from the Jira repo at `credential-helper-1.0.3`. Never edit it; `bash build/check-contract-copy.sh` proves it.
 
 ## Commands
 
@@ -41,5 +41,5 @@ bash build/check-vulnerable.sh --line 17   # restores that line (locked) and aud
 
 ## Keep
 
-- Floors never below 17.8.0 / 18.3.0. The repo is public: no reviews, plans of record or local paths in it.
+- Floors never below 17.8.0 / 18.3.0; the 19 line floor is 19.0.0-rc1 until 19.0.0 ships. The repo is public: no reviews, plans of record or local paths in it.
 - `docs/` holds only `design.md`, `plan.md`, `spikes.md`. Fake test secrets carry `// gitleaks:allow` from their first commit.
