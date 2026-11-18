@@ -3,7 +3,7 @@ name: Build and Test
 # Fast PR checks only (about 5 minutes): build and SQLite tests per Automate line at the floor and at the latest minor,
 # the credential-helper copy check, gitleaks, osv-scanner and check-vulnerable. Never add e2e or SQL Server here: they live
 # in release-checks.yml, which is run by hand.
-# eng/lines.txt is the single list of lines (18 only for now); the matrix follows it.
+# eng/lines.txt is the single list of lines (17, 18 and 19); the matrix follows it.
 on:
   pull_request:
     branches: [main]
@@ -66,7 +66,8 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
-          global-json-file: global.json
+          # 19 targets net11.0 and needs the 11 SDK; 17 and 18 stay on the 10 SDK. global.json (latestMajor) accepts both.
+          dotnet-version: ${{ matrix.line == '19' && '11.x' || '10.x' }}
           # NuGet cache keyed on the per-line lock files. Not used in publish.yml, so a release never restores from a PR-filled cache.
           cache: true
           cache-dependency-path: '**/packages.*.lock.json'
@@ -151,6 +152,10 @@ jobs:
         --lockfile=packages.lock.json:./src/Umbraco.Community.Automate.DeployHooks.IntegrationTests/packages.17.lock.json
         --lockfile=packages.lock.json:./demo/Umbraco.Community.Automate.DeployHooks.DemoSite/packages.18.lock.json
         --lockfile=packages.lock.json:./demo/Umbraco.Community.Automate.DeployHooks.DemoSite/packages.17.lock.json
+        --lockfile=packages.lock.json:./src/Umbraco.Community.Automate.DeployHooks/packages.19.lock.json
+        --lockfile=packages.lock.json:./src/Umbraco.Community.Automate.DeployHooks.Tests/packages.19.lock.json
+        --lockfile=packages.lock.json:./src/Umbraco.Community.Automate.DeployHooks.IntegrationTests/packages.19.lock.json
+        --lockfile=packages.lock.json:./demo/Umbraco.Community.Automate.DeployHooks.DemoSite/packages.19.lock.json
 
   deps:
     needs: osv
@@ -165,14 +170,34 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
-          global-json-file: global.json
+          dotnet-version: 10.x
           cache: true
           cache-dependency-path: '**/packages.*.lock.json'
-      # check-vulnerable.sh --line does the locked restore for that line itself and audits that restore, so every line
-      # in eng/lines.txt is covered and a new line needs no edit here.
+      # check-vulnerable.sh --line does the locked restore for that line itself and audits that restore. This job stays on
+      # the 10 SDK and covers the lines below 19; "deps (19)" covers 19 on the 11 SDK, so 17 and 18 are never audited on the 11 SDK.
       - name: Vulnerable packages per line (direct and transitive)
         run: |
           set -euo pipefail
           while read -r line; do
             bash build/check-vulnerable.sh --line "$line"
-          done < <(grep -vE '^\s*(#|$)' eng/lines.txt | tr -d ' \r')
+          done < <(grep -vE '^\s*(#|$)' eng/lines.txt | tr -d ' \r' | grep -vx 19)
+
+  deps-19:
+    name: deps (19)
+    needs: osv
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup .NET
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          dotnet-version: 11.x
+          cache: true
+          cache-dependency-path: '**/packages.*.lock.json'
+      - name: Vulnerable packages on line 19 (direct and transitive)
+        run: bash build/check-vulnerable.sh --line 19

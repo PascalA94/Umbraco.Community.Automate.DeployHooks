@@ -7,7 +7,9 @@ Automate actions that trigger Vercel, Netlify and Cloudflare Pages deploy hooks 
 [![NuGet downloads](https://img.shields.io/nuget/dt/Umbraco.Community.Automate.DeployHooks)](https://www.nuget.org/packages/Umbraco.Community.Automate.DeployHooks)
 [![Licence: MIT](https://img.shields.io/badge/licence-MIT-blue)](https://github.com/PascalA94/Umbraco.Community.Automate.DeployHooks/blob/main/LICENSE)
 
-A community package, not made or supported by Umbraco HQ. Requires Umbraco 18 (18.3.0 or later) with Umbraco Automate 18.5.1 or later, on .NET 10.
+A community package, not made or supported by Umbraco HQ. Requires Umbraco 17.8 or later with Umbraco Automate 17.5.1 or later, Umbraco 18.3 or later with Automate 18.5.1 or later, or Umbraco 19.0.0-rc1 or later with Automate 19.0.0-rc1 or later (release candidate). .NET 10 for 17 and 18, .NET 11 for 19.
+
+Built against Umbraco 19.0.0-rc1, not yet verified on 19 stable.
 
 ![An automation: Content Published, Get Content, then Revalidate Next.js paths and tags.](https://raw.githubusercontent.com/PascalA94/Umbraco.Community.Automate.DeployHooks/main/assets/screenshots/screenshot-01-automation.jpg)
 
@@ -27,7 +29,9 @@ HTTP Request can call a hook, but the hook URL then sits in the step settings, r
 
 | Package version | Umbraco | Automate |
 |---|---|---|
+| 19.x (release candidate) | 19 (19.0.0-rc1 or later) | 19.0.0-rc1 or later |
 | 18.x | 18 (18.3.0 or later) | 18.5.1 or later |
+| 17.x | 17 (17.8.0 or later) | 17.5.1 or later |
 
 ## Install
 

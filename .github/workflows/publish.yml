@@ -1,9 +1,9 @@
 name: publish
 
-# Runs on a version tag pushed by Pascal after the release PR is squash-merged. One tag ships every line in
-# eng/lines.txt: tag v18.<minor>.<patch>[-<suffix>] packs 18.<minor>.<patch>[-<suffix>] and
-# 17.<minor>.<patch>[-<suffix>] (plan Global Constraints: one tag ships both lines). Run "release-checks" on the
-# release PR first.
+# Runs on a version tag pushed by Pascal after the release PR is squash-merged. The tag's major picks the lines:
+# v18.<minor>.<patch>[-<suffix>] packs 18.<minor>.<patch>[-<suffix>] and 17.<minor>.<patch>[-<suffix>] (one tag
+# ships both lines), v19.<minor>.<patch>[-<suffix>] packs line 19 only (19.<minor>.<patch>[-<suffix>]), so a 19 release
+# never republishes the 17 and 18 versions. Run "release-checks" on the release PR first.
 on:
   push:
     tags:
@@ -28,10 +28,6 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
-        with:
-          global-json-file: global.json
-
       - name: Read the tag
         id: tag
         env:
@@ -42,19 +38,30 @@ jobs:
           if grep -qvE '^[0-9]+$' <<<"$lines"; then
             echo "eng/lines.txt must hold one numeric line per row" >&2; exit 1
           fi
-          newest="$(sort -n <<<"$lines" | tail -1)"
           if [[ ! "$TAG" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)(-([0-9A-Za-z][0-9A-Za-z.-]*))?$ ]]; then
             echo "Tag $TAG is not v<line>.<minor>.<patch>[-<suffix>]" >&2; exit 1
           fi
-          if [[ "${BASH_REMATCH[1]}" != "$newest" ]]; then
-            echo "Tag $TAG must start with the newest line, v$newest" >&2; exit 1
+          major="${BASH_REMATCH[1]}"
+          case "$major" in
+            19) lines_sel="$(grep -x 19 <<<"$lines" || true)"; sdk="11.x" ;;
+            18) lines_sel="$(grep -x -e 17 -e 18 <<<"$lines" || true)"; sdk="10.x" ;;   # packs 17 and 18, exactly as before 19
+            *)  echo "Tag $TAG: major must be 18 or 19" >&2; exit 1 ;;
+          esac
+          if [ -z "$lines_sel" ]; then
+            echo "Tag $TAG selects no line in eng/lines.txt" >&2; exit 1
           fi
           {
             echo "minor=${BASH_REMATCH[2]}"
             echo "patch=${BASH_REMATCH[3]}"
             echo "suffix=${BASH_REMATCH[5]}"
-            echo "lines=$(tr '\n' ' ' <<<"$lines")"
+            echo "lines=$(tr '\n' ' ' <<<"$lines_sel")"
+            echo "sdk=$sdk"
           } >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          # 19 targets net11.0 and needs the 11 SDK; a v18 tag only packs 17 and 18. The tag is parsed first, so the SDK follows it.
+          dotnet-version: ${{ steps.tag.outputs.sdk }}
 
       - name: Tag is on main and in the changelog
         env:
@@ -79,7 +86,11 @@ jobs:
             bash build/check-vulnerable.sh --line "$line"
             bash build/pack.sh "$line" ./artifacts "$MINOR" "$PATCH" ${SUFFIX:+"$SUFFIX"}
           done
-          for pkg in ./artifacts/*.nupkg; do bash build/check-packed-readme.sh "$pkg"; done
+          # One package per selected line: v18.* gives 2, v19.* gives 1.
+          packs=(./artifacts/*.nupkg)
+          expected="$(wc -w <<<"$LINES" | tr -d ' ')"
+          [ "${#packs[@]}" -eq "$expected" ] || { echo "Expected $expected nupkg(s), found ${#packs[@]}" >&2; exit 1; }
+          for pkg in "${packs[@]}"; do bash build/check-packed-readme.sh "$pkg"; done
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -116,4 +127,4 @@ jobs:
       - name: Push to NuGet
         env:
           NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
-        run: dotnet nuget push ./artifacts/*.nupkg --source https://api.nuget.org/v3/index.json --api-key "$NUGET_API_KEY"
+        run: dotnet nuget push ./artifacts/*.nupkg --source https://api.nuget.org/v3/index.json --skip-duplicate --api-key "$NUGET_API_KEY"

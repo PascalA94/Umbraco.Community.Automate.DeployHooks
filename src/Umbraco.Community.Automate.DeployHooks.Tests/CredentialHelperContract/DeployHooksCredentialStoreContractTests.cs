@@ -1,4 +1,4 @@
-// credential-helper-contract: 1.0.1
+// credential-helper-contract: 1.0.3
 global using Umbraco.Community.Automate.DeployHooks.Credentials;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;

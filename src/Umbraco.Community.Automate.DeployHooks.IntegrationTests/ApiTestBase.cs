@@ -77,14 +77,14 @@ public abstract class ApiTestBase : UmbracoTestServerTestBase
         BaseAddress = new Uri("https://localhost/", UriKind.Absolute),
     });
 
-    /// <summary>Returns a client authenticated as <paramref name="user"/> through login and PKCE.</summary>
+    /// <summary>Returns a client authenticated as <paramref name="user"/> through login and PKCE (login alone on 19).</summary>
     protected async Task<HttpClient> CreateAuthenticatedClientAsync(IUser user)
     {
         var (client, _) = await AuthenticateAsync(user);
         return client;
     }
 
-    /// <summary>Authenticates and also returns the raw token response (access and refresh token cookies).</summary>
+    /// <summary>Authenticates and also returns the raw response that set the session: the token response (access and refresh token cookies) on 17 and 18, the login response (session cookie) on 19.</summary>
     protected async Task<(HttpClient Client, HttpResponseMessage TokenResponse)> AuthenticateAsync(IUser user)
     {
         await SetPasswordAsync(user);
@@ -97,6 +97,20 @@ public abstract class ApiTestBase : UmbracoTestServerTestBase
         });
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
+#if AUTOMATE_19
+        // 19 is cookie-only: login sets UMB_UCONTEXT and the Management API accepts it alone. The client above has
+        // HandleCookies = true, so the cookie rides along. No PKCE, no bearer header: a placeholder bearer would hide
+        // whether the cookie alone authenticates.
+        HttpResponseMessage login = await client.PostAsync(
+            ManagementApi + "security/back-office/login",
+            JsonContent.Create(new LoginRequestModel { Username = user.Username, Password = TestUsers.Password }));
+        if (login.StatusCode != HttpStatusCode.OK)
+        {
+            throw new InvalidOperationException($"Login failed: {(int)login.StatusCode} {await login.Content.ReadAsStringAsync()}");
+        }
+
+        return (client, login);
+#else
         // Mirrors BackOfficeApplicationManager's (internal) backoffice descriptor: public client
         // "umbraco-back-office", redirect = host + Umbraco:CMS:Security:AuthorizeCallbackPathName.
         using IServiceScope serviceScope = Services.CreateScope();
@@ -145,6 +159,7 @@ public abstract class ApiTestBase : UmbracoTestServerTestBase
         client.DefaultRequestHeaders.Add("Cookie", $"__Host-umbAccessToken={accessToken}");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "[redacted]");
         return (client, token);
+#endif
     }
 
     protected static string? ReadCookie(HttpResponseMessage response, string name)

@@ -71,7 +71,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
-          dotnet-version: '10.x'
+          dotnet-version: ${{ matrix.line == '19' && '11.x' || '10.x' }}
           # NuGet cache keyed on the lock files. Not used in publish.yml, so a release never restores from a PR-filled cache.
           cache: true
           cache-dependency-path: '**/packages.*.lock.json'
@@ -96,6 +96,8 @@ jobs:
   e2e:
     needs: lines
     runs-on: ubuntu-latest
+    # On 19 the e2e result is advisory (SQL Server integration is the required gate); the summary step below records a failure.
+    continue-on-error: ${{ matrix.line == '19' }}
     strategy:
       fail-fast: false
       matrix:
@@ -107,7 +109,7 @@ jobs:
       ConnectionStrings__umbracoDbDSN_ProviderName: Microsoft.Data.SqlClient
       # Umbraco's OpenIddict server refuses plain HTTP (ID2083), so the demo runs on HTTPS with the .NET dev certificate.
       URL: https://localhost:44331
-      # Invitation links need a fixed application URL on Umbraco 18.3+.
+      # Invitation links need a fixed application URL on Umbraco 18.3+ (assumed to hold on 19; the first 19 e2e run shows).
       Umbraco__CMS__WebRouting__UmbracoApplicationUrl: https://localhost:44331
       ADMIN_EMAIL: admin@example.test
     steps:
@@ -145,7 +147,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
-          dotnet-version: '10.x'
+          dotnet-version: ${{ matrix.line == '19' && '11.x' || '10.x' }}
           # NuGet cache keyed on the lock files. Not used in publish.yml, so a release never restores from a PR-filled cache.
           cache: true
           cache-dependency-path: '**/packages.*.lock.json'
@@ -198,3 +200,11 @@ jobs:
             tests/e2e/playwright-report
             tests/e2e/test-results
             demo.log
+
+      - name: Record a 19 e2e failure
+        if: failure() && matrix.line == '19'
+        # A green run can hide a 19 e2e failure because of continue-on-error. Copy this line into the GitHub release notes.
+        run: |
+          failed=""
+          for d in tests/e2e/test-results/*/; do [ -d "$d" ] && failed="$failed$(basename "$d") "; done
+          echo "19 e2e FAILED (${{ matrix.leg }} leg): ${failed:-see the e2e-19-${{ matrix.leg }} artifact}" >> "$GITHUB_STEP_SUMMARY"

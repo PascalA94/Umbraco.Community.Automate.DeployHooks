@@ -8,7 +8,9 @@ public class ScaffoldTests
     public void Assembly_IsBuiltForTheSelectedAutomateMajor()
     {
         // The constant comes from -p:AutomateMajor, so it names the line this test project was built for.
-#if AUTOMATE_17
+#if AUTOMATE_19
+        const string selected = "19";
+#elif AUTOMATE_17
         const string selected = "17";
 #else
         const string selected = "18";

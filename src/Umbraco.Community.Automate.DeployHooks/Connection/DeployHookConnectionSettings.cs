@@ -13,7 +13,7 @@ public sealed class DeployHookConnectionSettings
     [Field(
         Label = "Provider",
         Description = "Where the site is hosted. The hook URL in configuration must belong to this provider.",
-        EditorUiAlias = "Umb.PropertyEditorUi.Dropdown",
+        EditorUiAlias = EditorAliases.SingleDropdown,
         EditorConfig = """[{"alias":"items","value":["Vercel","Netlify","CloudflarePages"]}]""",
         SupportsBindings = false,
         SortOrder = 1)]
